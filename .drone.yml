@@ -1,0 +1,105 @@
+---
+kind: pipeline
+name: deploy
+type: kubernetes
+
+steps:
+
+  - name: package
+    image: registry.cn-shenzhen.aliyuncs.com/kayb/maven:3.5-jdk-8
+    commands:
+      - mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+
+  - name: build-docker-image
+    image: plugins/docker
+    settings:
+      repo: registry.cn-shenzhen.aliyuncs.com/kayb/datax-web
+      registry: registry.cn-shenzhen.aliyuncs.com
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      tag:
+        - ${DRONE_TAG}
+        - latest
+      build_args:
+        GIT_TAG: ${DRONE_TAG}
+    when:
+      event: tag
+
+  - name: deploy-to-k8s
+    image: registry.cn-shenzhen.aliyuncs.com/kayb/drone-helm
+    environment:
+      PROD_API_SERVER:
+        from_secret: k8s_api_server
+      PROD_KUBERNETES_TOKEN:
+        from_secret: k8s_token
+    settings:
+      skip_tls_verify: true
+      stable_repo_url: https://kubernetes.oss-cn-hangzhou.aliyuncs.com/charts
+      chart: ./charts/datax-web
+      release: datax-web
+      values: 
+      prefix: PROD
+      namespace: infra
+      debug: true
+    when:
+      event: tag
+
+  - name: wechat
+    image: lizheming/drone-wechat
+    settings:
+      corpid:
+        from_secret: devops_corp_id
+      corp_secret:
+        from_secret: devops_corp_secret
+      agent_id: 1000006
+      to_user: "@all"
+      to_party: ""
+      to_tag: ""
+      msg_url: ${DRONE_BUILD_LINK}
+      safe: 1
+      btn_txt: more
+      title: "${DRONE_REPO_NAME} build No.${DRONE_BUILD_NUMBER}"
+      message: >
+        {%if success %}
+          build {{build.number}} succeeded. Good job.
+        {% else %}
+          build {{build.number}} failed. Fix me please.
+        {% endif %}
+---
+kind: secret
+name: docker_username
+get:
+  path: docker
+  name: docker_username
+---
+kind: secret
+name: docker_password
+get:
+  path: docker
+  name: docker_password
+---
+kind: secret
+name: k8s_api_server
+get:
+  path: docker
+  name: k8s_api_server
+---
+kind: secret
+name: k8s_token
+get:
+  path: docker
+  name: k8s_token
+---
+kind: secret
+name: devops_corp_id
+get:
+  path: docker
+  name: devops_corp_id
+---
+kind: secret
+name: devops_corp_secret
+get:
+  path: docker
+  name: devops_corp_secret
