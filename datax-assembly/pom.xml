@@ -34,7 +34,7 @@
                     <descriptors>
                         <descriptor>${basedir}/package.xml</descriptor>
                     </descriptors>
-                    <finalName>${project.parent.artifactId}-${project.parent.version}</finalName>
+                    <finalName>${project.parent.artifactId}</finalName>
                     <outputDirectory>../build</outputDirectory>
                 </configuration>
             </plugin>
