@@ -9,6 +9,11 @@ steps:
     image: registry.cn-shenzhen.aliyuncs.com/kayb/maven:3.5-jdk-8
     commands:
       - mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+    volumes:
+    - name: m2
+      path: /root/.m2/repository
+    settings:
+      restore: true
 
   - name: build-docker-image
     image: plugins/docker
@@ -67,6 +72,11 @@ steps:
         {% else %}
           build {{build.number}} failed. Fix me please.
         {% endif %}
+
+volumes:
+  - name: m2
+    host:
+      path: /data/.m2/repository
 ---
 kind: secret
 name: docker_username
