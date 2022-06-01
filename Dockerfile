@@ -10,7 +10,7 @@ ADD ./requirements.txt .
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \
 apk update && \
-apk add --no-cache vim wget curl python3 bash && \
+apk add --no-cache vim wget curl python3 bash gcc && \
 ln -s /usr/bin/python3.6 /usr/bin/python && \
 python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host pypi.tuna.tsinghua.edu.cn && \
 wget -q --show-progress http://datax-opensource.oss-cn-hangzhou.aliyuncs.com/datax.tar.gz && \
